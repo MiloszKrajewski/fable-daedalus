@@ -1,0 +1,6 @@
+{
+    "module": "commonjs",
+    "sourceMaps": true,
+    "projFile": "./src/fs/fable.fsproj",
+    "outDir": "./build/fs"
+}

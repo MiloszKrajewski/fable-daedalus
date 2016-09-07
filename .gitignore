@@ -1,0 +1,5 @@
+*.log
+*.bak
+node_modules/
+build/
+out/
