@@ -3,8 +3,6 @@ namespace Daedalus
 open System
 open Fable.Core
 open Fable.Core.JsInterop
-open Fable.Import
-open Fable.Import.Browser
 
 open Fable.Helpers.Virtualdom
 open Fable.Helpers.Virtualdom.App
@@ -26,11 +24,11 @@ module Game =
     type World = 
         {
             Size: Coords
-            Rooms: Room[][]
+            Rooms: Map<Coords, Room>
         }
 
     type State = {
-        Current: Coords
+        Current: Coords option
         World: World
         Stack: Coords list 
     }
@@ -41,9 +39,15 @@ module Game =
         Exits = []
     }
 
+    let createRooms width height = seq {
+        for y = 0 to height - 1 do
+            for x = 0 to width - 1 do
+                yield newRoom x y
+    }
+
     let newWorld width height = {
         Size = (width, height)
-        Rooms = Array.init height (fun y -> Array.init width (fun x -> newRoom x y))
+        Rooms = createRooms width height |> Seq.map (fun r -> r.Position, r) |> Map.ofSeq
     }
 
     let shift direction (x, y) = 
@@ -53,8 +57,13 @@ module Game =
         | South -> (x, y + 1)
         | West -> (x - 1, y)
 
-    let enter (room: Room) (state: State) = 
-        
+    let enter (state: State) =
+        let room = state.Current |> Option.map (fun c -> state.World.Rooms |> Map.find c)
+        match room with
+        | None -> state
+        | Some r when r.Visited -> state
+         
+
 
     let advance state = 
         state |> enter state.Current
