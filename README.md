@@ -1,5 +1,5 @@
-# fable-bootstrap-virtualdom
-Scaffolding for project with Fable, Bootstrap and VirtualDom.
+# fable-daedalus
+Labirynth generator with Fable and VirtualDom
 
 Includes:
 * Fable

@@ -1,5 +1,6 @@
-﻿namespace Playground
+﻿namespace Daedalus
 
+open System
 open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
@@ -9,18 +10,18 @@ open Fable.Helpers.Virtualdom
 open Fable.Helpers.Virtualdom.App
 open Fable.Helpers.Virtualdom.Html
 
-open Playground.Js
+open Daedalus.Js
+open Daedalus.Game
 
 module Main =
-    type Model = { Value: int }
+    type Model = { 
+        Value: int
+     }
+
+    type Event = | Reset | Up | Down
 
     let elem = Tags.elem
     let attr = Attributes.attribute
-
-    type Event = 
-        | Reset
-        | Up
-        | Down
 
     let model = { Value = -5 }
 
@@ -46,6 +47,7 @@ module Main =
         ]
 
     let main () = 
+        let w = newWorld 100 100
         printfn "Main.main()"
         createApp model view update
         |> withStartNodeSelector "#main"

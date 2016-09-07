@@ -12,7 +12,13 @@ def spawn(args, name):
     devnull = subprocess.DEVNULL 
     return (subprocess.Popen(cmdl, stdin=devnull).pid, name)
 
-def kill_safe(process):
+def safe_find_process(pid):
+    try:
+        return psutil.Process(pid)
+    except psutil.NoSuchProcess:
+        pass
+
+def safe_kill_process(process):
     try:
         process.kill()
     except psutil.NoSuchProcess:
@@ -23,10 +29,11 @@ def kill(pid, name=None):
         return
     if name is not None:
         print("Killing '{}'".format(name))
-    parent = psutil.Process(pid)
-    for child in parent.children(recursive=True):
-        kill_safe(child)
-    kill_safe(parent)
+    parent = safe_find_process(pid)
+    if parent is not None:
+        for child in parent.children(recursive=True):
+            safe_kill_process(child)
+        safe_kill_process(parent)
 
 def wait(secs):
     print("Waiting {}s".format(secs))

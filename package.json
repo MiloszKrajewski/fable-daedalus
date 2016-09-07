@@ -1,7 +1,7 @@
 {
-  "name": "playground",
+  "name": "daedalus",
   "version": "1.0.0",
-  "description": "Playground for Fable",
+  "description": "Daedalus",
   "main": "./src/index.js",
   "scripts": {
     "fable": "fable",
@@ -10,7 +10,7 @@
     "release": "fable & webpack -p",
     "serve": "http-server ./out"
   },
-  "author": "Playground",
+  "author": "Milosz Krajewski",
   "license": "BSD",
   "devDependencies": {
     "babel-cli": "^6.14.0",

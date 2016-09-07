@@ -1,4 +1,4 @@
-namespace Playground
+namespace Daedalus
 
 open Fable.Core
 open Fable.Core.JsInterop
