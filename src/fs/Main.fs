@@ -1,10 +1,11 @@
 ﻿namespace Daedalus
 
 open System
+open System.Collections.Generic
+
 open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
-open Fable.Import.Browser
 
 open Fable.Helpers.Virtualdom
 open Fable.Helpers.Virtualdom.App
@@ -46,9 +47,13 @@ module Main =
             button "Decrement" Down
         ]
 
-    let main () = 
-        let w = newWorld 100 100
+    let main () =
+        // let optionToString option = match option with | None -> "None" | Some value -> value |> sprintf "Some %A"
+        // Some 7 |> Option.filter (fun _ -> false) |> optionToString |> printfn "%s"
+        // Some 7 |> Option.filter (fun _ -> true) |> optionToString |> printfn "%s"
+
         printfn "Main.main()"
-        createApp model view update
-        |> withStartNodeSelector "#main"
-        |> start renderer
+        // createApp model view update |> withStartNodeSelector "#main" |> start renderer
+        let visited = HashSet()
+        let numbers = Game.dfs2 (fun i -> visited.Contains(i)) (fun i -> if i < 10000 then [i + 1] else []) 0 |> Seq.toArray
+        printfn "%A" numbers

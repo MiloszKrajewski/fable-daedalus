@@ -13,6 +13,7 @@ module Js =
     module Option = 
         let def v o = defaultArg o v
         let alt a o = match o with | None -> a | _ -> o
+        let filter f o = match o with | Some v when f v -> o | _ -> None
 
     module Time = 
         let now () = DateTime.UtcNow.Subtract(DateTime.MinValue).TotalSeconds
