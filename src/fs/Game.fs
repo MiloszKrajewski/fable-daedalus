@@ -1,8 +1,11 @@
 namespace Daedalus
 
 open System
+open System.Collections.Generic
+
 open Fable.Core
 open Fable.Core.JsInterop
+open Fable.Import
 
 open Fable.Helpers.Virtualdom
 open Fable.Helpers.Virtualdom.App
@@ -56,14 +59,27 @@ module Game =
         | East -> (x + 1, y)
         | South -> (x, y + 1)
         | West -> (x - 1, y)
-
-    let enter (state: State) =
-        let room = state.Current |> Option.map (fun c -> state.World.Rooms |> Map.find c)
-        match room with
-        | None -> state
-        | Some r when r.Visited -> state
          
+    // let rec dfs1 visited next start = seq {
+    //     match start |> visited with
+    //     | false -> yield start; yield! start |> next |> Seq.collect (dfs1 visited next)
+    //     | true -> ()
+    // }
 
+    let dfs2 visited fanout start = seq {
+        let mutable stack = [start]
+        let push item = stack <- item :: stack
+        let pop () = match stack with | [] -> None | head :: tail -> stack <- tail; Some head
+        let next = pop >> Option.filter (visited >> not)
 
-    let advance state = 
-        state |> enter state.Current
+        let rec loop () = seq {
+            match next () with
+            | None -> ()
+            | Some item -> 
+                yield item
+                item |> fanout |> Seq.iter push
+                yield! loop ()
+        }
+
+        yield! loop ()
+    }

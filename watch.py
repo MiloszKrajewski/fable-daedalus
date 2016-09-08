@@ -5,10 +5,10 @@ import threading
 import time
 import psutil
 
-def spawn(args, name):
+def spawn(command, name):
     if name is not None:
         print("Starting '{}'".format(name))
-    cmdl = "cmd /c {}".format(args)
+    cmdl = "cmd /c {}".format(command)
     devnull = subprocess.DEVNULL 
     return (subprocess.Popen(cmdl, stdin=devnull).pid, name)
 
@@ -34,6 +34,17 @@ def kill(pid, name=None):
         for child in parent.children(recursive=True):
             safe_kill_process(child)
         safe_kill_process(parent)
+
+# def watch(command, name):
+#     stop = Event()
+#     done = Event()
+#     def loop():
+#         try:
+#             while not stop.is_set():
+#                 pid, _ = spawn(command, name)
+#         finally:
+#             done.set()
+#     thread = threading.Thread()
 
 def wait(secs):
     print("Waiting {}s".format(secs))
