@@ -35,16 +35,45 @@ def kill(pid, name=None):
             safe_kill_process(child)
         safe_kill_process(parent)
 
-# def watch(command, name):
-#     stop = Event()
-#     done = Event()
-#     def loop():
-#         try:
-#             while not stop.is_set():
-#                 pid, _ = spawn(command, name)
-#         finally:
-#             done.set()
-#     thread = threading.Thread()
+def watch(command, name):
+    stop = threading.Event()
+    done = threading.Event()
+    pid = None
+
+    def _spawn():
+        nonlocal pid
+        pid, _ = spawn(command, name)
+
+    def _kill():
+        nonlocal pid
+        kill(pid, name)
+        pid = None
+    
+    def _test():
+        return safe_find_process(pid) is not None
+
+    def _join():
+        stop.set()
+        done.wait() 
+
+    def _loop():
+        try:
+            _spawn()
+            while True:
+                stop.wait(1)
+                if stop.is_set():
+                    _kill()
+                    break
+                elif not _test():
+                    print("Restarting '{}'".format(name))
+                    wait(5)
+                    _spawn()
+        finally:
+            done.set()
+
+    thread = threading.Thread(target=_loop)
+    thread.start()
+    return _join
 
 def wait(secs):
     print("Waiting {}s".format(secs))
@@ -56,17 +85,17 @@ def pause():
 
 if __name__ == '__main__':
     while True:
-        pids = [
-            spawn("nx fable -w", "Fable"),
-            spawn("nx webpack --watch", "Webpack"),
-            spawn("nx http-server ./out", "Server")
+        finalizers = [
+            watch("nx fable -w", "Fable"),
+            watch("nx webpack --watch", "Webpack"),
+            watch("nx http-server ./out", "Server")
         ]
 
         wait(10)
         command = pause().strip().lower()
 
-        for pid in pids:
-            kill(*pid)
+        for finalizer in finalizers:
+            finalizer()
 
         if command == 'q':
             break

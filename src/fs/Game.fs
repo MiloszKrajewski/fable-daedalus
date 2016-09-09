@@ -60,26 +60,20 @@ module Game =
         | South -> (x, y + 1)
         | West -> (x - 1, y)
          
-    // let rec dfs1 visited next start = seq {
+    // let rec dfs visited fanout start = seq {
     //     match start |> visited with
-    //     | false -> yield start; yield! start |> next |> Seq.collect (dfs1 visited next)
+    //     | false -> yield start; yield! start |> fanout |> Seq.filter (visited >> not) |> Seq.collect (dfs1 visited fanout)
     //     | true -> ()
     // }
 
-    let dfs2 visited fanout start = seq {
-        let mutable stack = [start]
-        let push item = stack <- item :: stack
-        let pop () = match stack with | [] -> None | head :: tail -> stack <- tail; Some head
-        let next = pop >> Option.filter (visited >> not)
-
-        let rec loop () = seq {
-            match next () with
-            | None -> ()
-            | Some item -> 
-                yield item
-                item |> fanout |> Seq.iter push
-                yield! loop ()
+    let dfs visited fanout start =
+        let rec loop stack = seq {
+            match stack with
+            | [] -> ()
+            | head :: tail when visited head -> yield! loop tail 
+            | head :: tail ->
+                yield head
+                let head' = head |> fanout |> Seq.filter (visited >> not) |> List.ofSeq
+                yield! loop (head' @ tail)
         }
-
-        yield! loop ()
-    }
+        loop [start]

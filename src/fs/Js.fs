@@ -4,6 +4,7 @@ open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import.Browser
 open System
+open System.Collections.Generic
 
 module Js =
     let inline empty () = createEmpty ()
@@ -14,6 +15,16 @@ module Js =
         let def v o = defaultArg o v
         let alt a o = match o with | None -> a | _ -> o
         let filter f o = match o with | Some v when f v -> o | _ -> None
+
+    type Enumerator<'item>(enumerator: IEnumerator<'item>) =
+        member this.Next () = match enumerator.MoveNext () with | false -> None | _ -> Some this
+        member this.Value with get () = enumerator.Current
+
+    [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
+    module Enumerator =
+        let next (enumerator: Enumerator<_>) = enumerator.Next()
+        let create (enumerable: IEnumerable<_>) = Enumerator(enumerable.GetEnumerator()) |> next
+        let value (enumerator: Enumerator<_>) = enumerator.Value
 
     module Time = 
         let now () = DateTime.UtcNow.Subtract(DateTime.MinValue).TotalSeconds
