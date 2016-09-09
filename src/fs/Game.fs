@@ -66,6 +66,25 @@ module Game =
     //     | true -> ()
     // }
 
+    let dfs2 visited fanout start =
+        let fanout = fanout >> Seq.filter (visited >> not) >> List.ofSeq 
+        let push chunk stack = chunk :: stack
+        let rec pop stack =
+            match stack with
+            | [] -> None
+            | [] :: rest -> pop rest
+            | (head :: tail) :: rest when visited head -> pop (tail :: rest)
+            | (head :: tail) :: rest -> Some (head, tail :: rest)
+        
+        let rec loop stack = seq {
+            match pop stack with
+            | None -> ()
+            | Some (head, tail) ->
+                yield head
+                yield! tail |> push (head |> fanout) |> loop
+        }
+        loop [[start]]
+
     let dfs visited fanout start =
         let rec loop stack = seq {
             match stack with
