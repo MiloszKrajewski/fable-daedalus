@@ -2,8 +2,10 @@
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <!--<Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>-->
+    <!--<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>-->
+    <Configuration>Release</Configuration>
+    <Platform>AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>a5967363-4df0-4673-8dae-a2ed50e5cf3f</ProjectGuid>
     <OutputType>Library</OutputType>

@@ -79,25 +79,43 @@ def wait(secs):
     print("Waiting {}s".format(secs))
     time.sleep(5)
 
-def pause():
-    print("Press <enter> to restart or <q+enter> to stop...")
-    return input()
+def main(configName=None):
+    import json
+    configName = configName or "./watchconfig.json"
+    print("Loading config from '{}''".format(configName))
+    with open(configName) as configFile:
+        configData = json.load(configFile)
 
-if __name__ == '__main__':
-    while True:
-        finalizers = [
-            watch("nx fable -w", "Fable"),
-            watch("nx webpack --watch", "Webpack"),
-            watch("nx http-server ./out", "Server")
-        ]
+    processes = [(command, name) for (name, command) in configData.items()]
+    finalizers = []
 
-        wait(10)
-        command = pause().strip().lower()
+    def start_all():
+        nonlocal finalizers
+        finalizers = [watch(*process) for process in processes]
 
+    def stop_all():
+        nonlocal finalizers
         for finalizer in finalizers:
             finalizer()
+        finalizer = []
 
+    start_all()
+
+    while True:
+        print("-- MENU --------------------------------\n")
+        print("  (R)estart")
+        print("  (Q)uit")
+        print("\n----------------------------------------")
+        command = input().strip().lower()
         if command == 'q':
+            stop_all()
             break
+        elif command == 'r':
+            stop_all()
+            start_all()
 
     print("Done.")
+   
+
+if __name__ == '__main__':
+    main()

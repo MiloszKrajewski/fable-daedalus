@@ -1,0 +1,5 @@
+{
+    "Fable": "nx fable -w",
+    "Webpack": "nx webpack --watch",
+    "Server": "nx http-server ./out"
+}

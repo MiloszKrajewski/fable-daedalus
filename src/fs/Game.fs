@@ -77,3 +77,7 @@ module Game =
                 yield! loop (head' @ tail)
         }
         loop [start]
+
+    let dfsWithVisitedSet fanout start =
+        let visited = HashSet()
+        dfs visited.Contains fanout start

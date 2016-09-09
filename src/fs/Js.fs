@@ -20,7 +20,7 @@ module Js =
         member this.Next () = match enumerator.MoveNext () with | false -> None | _ -> Some this
         member this.Value with get () = enumerator.Current
 
-    [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
+    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
     module Enumerator =
         let next (enumerator: Enumerator<_>) = enumerator.Next()
         let create (enumerable: IEnumerable<_>) = Enumerator(enumerable.GetEnumerator()) |> next
