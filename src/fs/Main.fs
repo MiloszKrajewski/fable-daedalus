@@ -54,12 +54,16 @@ module Main =
 
         printfn "Main.main()"
         // createApp model view update |> withStartNodeSelector "#main" |> start renderer
+        
         let rec loop enumerator = 
             match enumerator with
             | None -> ()
             | Some e -> 
                 e |> Enumerator.value |> printfn "%d" 
                 e |> Enumerator.next |> loop
+        
+        let rec sum v m s = if v >= m then s else sum (v + 1) m (s + v)
+        printfn "%d" (sum 0 100000 0)
 
-        let visited = HashSet()
-        Game.dfs visited.Contains (fun i -> if i < 10000 then [i + 1] else []) 0 |> Enumerator.create |> loop
+        // let visited = HashSet()
+        // Game.dfs visited.Contains (fun i -> if i < 10000 then [i + 1] else []) 0 |> Enumerator.create |> loop
