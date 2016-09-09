@@ -4,6 +4,7 @@ import subprocess
 import threading
 import time
 import psutil
+import json
 
 def spawn(command, name):
     if name is not None:
@@ -80,7 +81,6 @@ def wait(secs):
     time.sleep(5)
 
 def main(configName=None):
-    import json
     configName = configName or "./watchconfig.json"
     print("Loading config from '{}''".format(configName))
     with open(configName) as configFile:
@@ -102,11 +102,13 @@ def main(configName=None):
     start_all()
 
     while True:
-        print("-- MENU --------------------------------\n")
+        print("----------------------------------------\n")
         print("  (R)estart")
         print("  (Q)uit")
         print("\n----------------------------------------")
+
         command = input().strip().lower()
+
         if command == 'q':
             stop_all()
             break
