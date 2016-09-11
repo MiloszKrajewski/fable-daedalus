@@ -67,7 +67,7 @@ def watch(command, name):
                     break
                 elif not _test():
                     print("Restarting '{}'".format(name))
-                    wait(5)
+                    wait(10)
                     _spawn()
         finally:
             done.set()
@@ -82,7 +82,7 @@ def wait(secs):
 
 def main(configName=None):
     configName = configName or "./watchconfig.json"
-    print("Loading config from '{}''".format(configName))
+    print("Loading config from '{}'".format(configName))
     with open(configName) as configFile:
         configData = json.load(configFile)
 

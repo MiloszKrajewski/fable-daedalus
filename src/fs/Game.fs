@@ -17,6 +17,10 @@ module Game =
     type Coords = int * int
     type Direction = | North | East | South | West
 
+    type Action =
+        | InitAt of Coords
+        | MoveTo of Coords * Direction * Coords
+
     type Room = 
         {
             Position: Coords
@@ -29,12 +33,6 @@ module Game =
             Size: Coords
             Rooms: Map<Coords, Room>
         }
-
-    type State = {
-        Current: Coords option
-        World: World
-        Stack: Coords list 
-    }
 
     let newRoom x y = { 
         Position = (x, y)
@@ -53,50 +51,59 @@ module Game =
         Rooms = createRooms width height |> Seq.map (fun r -> r.Position, r) |> Map.ofSeq
     }
 
-    let shift direction (x, y) = 
-        match direction with
-        | North -> (x, y - 1)
-        | East -> (x + 1, y)
-        | South -> (x, y + 1)
-        | West -> (x - 1, y)
-         
-    // let rec dfs visited fanout start = seq {
-    //     match start |> visited with
-    //     | false -> yield start; yield! start |> fanout |> Seq.filter (visited >> not) |> Seq.collect (dfs1 visited fanout)
-    //     | true -> ()
-    // }
+    let opposite direction = 
+        match direction with 
+        | North -> South | South -> North 
+        | West -> East | East -> West
 
-    let dfs2 visited fanout start =
-        let fanout = fanout >> Seq.filter (visited >> not) >> List.ofSeq 
-        let push chunk stack = chunk :: stack
-        let rec pop stack =
-            match stack with
-            | [] -> None
-            | [] :: rest -> pop rest
-            | (head :: tail) :: rest when visited head -> pop (tail :: rest)
-            | (head :: tail) :: rest -> Some (head, tail :: rest)
-        
-        let rec loop stack = seq {
-            match pop stack with
-            | None -> ()
-            | Some (head, tail) ->
-                yield head
-                yield! tail |> push (head |> fanout) |> loop
-        }
-        loop [[start]]
+    let buildMaze x y (world: World) = 
+        let w, h = world.Size
 
-    let dfs visited fanout start =
-        let rec loop stack = seq {
-            match stack with
-            | [] -> ()
-            | head :: tail when visited head -> yield! loop tail 
-            | head :: tail ->
-                yield head
-                let head' = head |> fanout |> Seq.filter (visited >> not) |> List.ofSeq
-                yield! loop (head' @ tail)
-        }
-        loop [start]
+        let valid (x, y) = x >= 0 && y >= 0 && x < w && y < h
 
-    let dfsWithVisitedSet fanout start =
+        let shift direction (x, y) =
+            match direction with
+            | North -> (x, y - 1) | South -> (x, y + 1) 
+            | East -> (x + 1, y) | West -> (x - 1, y)
+            |> Some |> Option.filter valid
+
+        let sourcexy action = 
+            match action with | MoveTo (xy, _, _) -> Some xy | _ -> None 
+
+        let targetxy action = 
+            match action with | InitAt xy -> xy | MoveTo (_, _, xy) -> xy
+
+        let next location direction = 
+            location |> shift direction |> Option.map (fun xy -> MoveTo (location, direction, xy))
+
+        let fanout action = 
+            [| West; North; East; South |] |> Array.choose (action |> targetxy |> next)
+
+        let encode (x, y) = y*w + x 
+
+        let shuffle a = a
         let visited = HashSet()
-        dfs visited.Contains fanout start
+        let mark = targetxy >> encode >> visited.Add >> ignore
+        let test = targetxy >> encode >> visited.Contains
+        let path = InitAt (x, y) |> DFS.traverse mark test (fanout >> shuffle)
+
+        let updateSource action rooms = 
+            match action with
+            | InitAt _ -> rooms
+            | MoveTo (location, direction, _) -> 
+                rooms |> Map.update location (fun room -> 
+                    { room with Exits = direction :: room.Exits })
+
+        let updateTarget action rooms =
+            match action with
+            | InitAt location -> 
+                rooms |> Map.update location (fun room -> { room with Visited = true })
+            | MoveTo (location, direction, _) -> 
+                rooms |> Map.update location (fun room -> 
+                    { room with Visited = true; Exits = (opposite direction) :: room.Exits })
+
+        let fold world action =
+            printfn "%A" action
+            { world with Rooms = world.Rooms |> updateSource action |> updateTarget action }
+
+        path |> Seq.scan fold world

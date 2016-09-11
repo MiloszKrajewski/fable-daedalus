@@ -13,25 +13,52 @@ open Fable.Helpers.Virtualdom.Html
 
 open Daedalus.Js
 open Daedalus.Game
+open Daedalus.VDOM
 
 module Main =
-    type Model = { 
-        Value: int
-     }
+    type Model = {
+        World: World
+        Engine: Enumerator<World> option
+    }
 
-    type Event = | Reset | Up | Down
+    type Event = | Restart | Tick
 
-    let elem = Tags.elem
-    let attr = Attributes.attribute
+    let newModel () =
+        let world = newWorld 10 10
+        { World = world; Engine = world |> Game.buildMaze 0 0 |> Enumerator.create }
 
-    let model = { Value = -5 }
+    let nextModel (model: Model) = 
+        match model.Engine with
+        | None -> model
+        | Some engine -> 
+            let world = engine |> Enumerator.value
+            { model with World = world; Engine = engine |> Enumerator.next }
 
-    let update model event = 
+    let withTick (model: Model) =
+        match model.Engine with
+        | None -> model, []
+        | Some _ -> model, [deferEvent 0.1 Tick]
+
+    let update model event =
         match event with
-        | Reset -> { Value = 0 }
-        | Up -> { model with Value = model.Value + 1 }
-        | Down -> { model with Value = model.Value - 1 }
-        |> (fun m -> m, [])
+        | Restart -> newModel ()
+        | Tick -> model |> nextModel
+        |> withTick
+
+    let renderRoom (room: Room) = 
+        elem "x" [] []
+
+    let renderWorld (world: World) = [
+        printfn "renderWorld"
+        let w, h = world.Size
+        for y = 0 to h - 1 do
+            for x = 0 to w - 1 do
+                let room = world.Rooms.Item(x, y)
+                if room.Visited then
+                    yield renderRoom room
+    ]
+
+    // w * rw + (w+1)*dw
 
     let button label action =
         Tags.button 
@@ -39,22 +66,20 @@ module Main =
             [ text label ]
 
     let view model = 
-        div [] [ 
-            text (model |> sprintf "%A")
-            br []
-            button "Reset" Reset
-            button "Increment" Up
-            button "Decrement" Down
+        div [] [
+            div [attr "class" "container"; attr "style" "text-align: center; margin-top: 16px"] [
+                button "Restart" Restart
+            ]
+            div [attr "class" "container"; attr "style" "text-align: center"] [
+                svg [attr "width" "400"; attr "height" "400"] [
+                    Svg.rect [attr "x" "0"; attr "y" "0"; attr "width" "100"; attr "height" "100"] []
+                ] 
+            ]
         ]
 
     let main () =
-        // let optionToString option = match option with | None -> "None" | Some value -> value |> sprintf "Some %A"
-        // Some 7 |> Option.filter (fun _ -> false) |> optionToString |> printfn "%s"
-        // Some 7 |> Option.filter (fun _ -> true) |> optionToString |> printfn "%s"
-
         printfn "Main.main()"
-        // createApp model view update |> withStartNodeSelector "#main" |> start renderer
-        
-        Game.dfsWithVisitedSet (fun i -> if i < 10000 then [i + 1] else []) 0 
-        |> Seq.toList 
-        |> printfn "%A"
+
+        createApp (newModel ()) view update 
+        |> withStartNodeSelector "#main" 
+        |> start renderer

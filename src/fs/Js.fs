@@ -15,6 +15,14 @@ module Js =
         let def v o = defaultArg o v
         let alt a o = match o with | None -> a | _ -> o
         let filter f o = match o with | Some v when f v -> o | _ -> None
+    
+    module Map = 
+        let update key func map =
+            map |> Map.add key (map |> Map.find key |> func)
+
+    [<AutoOpen>]
+    module Fx =
+        let apply f v = f v; v
 
     type Enumerator<'item>(enumerator: IEnumerator<'item>) =
         member this.Next () = match enumerator.MoveNext () with | false -> None | _ -> Some this
