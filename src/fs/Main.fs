@@ -18,8 +18,8 @@ open Daedalus.VDOM
 module Main =
     let [<Literal>] WORLD_WIDTH = 20
     let [<Literal>] WORLD_HEIGHT = 20
-    let [<Literal>] ROOM_SIZE = 10
-    let [<Literal>] DOOR_SIZE = 2
+    let [<Literal>] ROOM_SIZE = 20
+    let [<Literal>] DOOR_SIZE = 5
 
     type Model = {
         World: World
@@ -51,28 +51,35 @@ module Main =
         |> withTick
 
     let renderBox className (x: int) (y: int) (w: int) (h: int) =
-        rect [
-            klass className 
-            attr "x" (string x); attr "y" (string y) 
-            attr "width" (string w); attr "height" (string h)
-        ] []
+        sprintf "M%d,%d h%dv%dh%dz" x y w h -w
 
-    let renderRoom (room: Room) = [|
+    let renderDoor (room: Room) = 
         let x, y = room.Position
         let x, y = x*ROOM_SIZE + (x + 1)*DOOR_SIZE, y*ROOM_SIZE + (y + 1)*DOOR_SIZE
-        yield renderBox "room" x y ROOM_SIZE ROOM_SIZE
-        for exit in room.Exits do
-            match exit with
-            | South -> yield renderBox "door" x (y + ROOM_SIZE) ROOM_SIZE DOOR_SIZE
-            | East -> yield renderBox "door" (x + ROOM_SIZE) y DOOR_SIZE ROOM_SIZE
-            | _ -> ()
-    |]
+        [|
+            for exit in room.Exits do
+                match exit with
+                | South -> yield renderBox "door" x (y + ROOM_SIZE) ROOM_SIZE DOOR_SIZE
+                | East -> yield renderBox "door" (x + ROOM_SIZE) y DOOR_SIZE ROOM_SIZE
+                | _ -> ()
+        |] |> Array.join " " 
 
-    let renderWorld (world: World) = 
-        world.Rooms
-        |> Array.collect id
-        |> Array.collect (fun r -> if r.Visited then renderRoom r else [||])
-        |> List.ofArray
+    let renderRoom (room: Room) = 
+        let x, y = room.Position
+        let x, y = x*ROOM_SIZE + (x + 1)*DOOR_SIZE, y*ROOM_SIZE + (y + 1)*DOOR_SIZE
+        renderBox "room" x y ROOM_SIZE ROOM_SIZE
+    
+    let mergePaths className renderObject (rooms: Room[]) =
+        rooms 
+        |> Array.map renderObject
+        |> Array.join " "
+        |> fun p -> Svg.svgElem "path" [klass className; attr "d" p] []
+ 
+    let renderWorld (world: World) = [
+        let rooms = world.Rooms |> Array.collect id |> Array.filter (fun r -> r.Visited)
+        yield rooms |> mergePaths "room" renderRoom
+        yield rooms |> mergePaths "door" renderDoor
+    ]
 
     let button label action =
         Tags.button 
@@ -91,7 +98,7 @@ module Main =
                 button "Restart" Restart
             ]
             div [klass "row content"] [
-                model.World |> renderWorld |> maze 
+                model.World |> renderWorld |> maze
             ]
         ]
 

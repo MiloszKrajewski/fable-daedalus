@@ -37,6 +37,9 @@ module Js =
             let result = array |> Array.copy
             shuffleInPlace result
             result
+        
+        [<Emit("$1.join($0)")>]
+        let join (separator: string) (array: string[]): string = failwith "JS only"
 
     module Map = 
         let update key func map =
