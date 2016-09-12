@@ -20,6 +20,13 @@ module Js =
         let update key func map =
             map |> Map.add key (map |> Map.find key |> func)
 
+    module Random =
+        [<Emit("Math.random()")>] 
+        let random () = failwith "JS only"
+
+        let randomInt min max =
+            Math.Floor(random () * (double max - double min + 1.0)) + double min |> int
+
     [<AutoOpen>]
     module Fx =
         let apply f v = f v; v
@@ -38,7 +45,7 @@ module Js =
         let now () = DateTime.UtcNow.Subtract(DateTime.MinValue).TotalSeconds
         let defer seconds (action: unit -> unit) = 
             let disposable = window.setTimeout (action, seconds / 1000.0)
-            { new IDisposable with member x.Dispose () = window.clearTimeout(disposable) }
+            fun () -> window.clearTimeout(disposable)
         let interval seconds (action: unit -> unit) =
             let disposable = window.setInterval (action, seconds / 1000.0)
-            { new IDisposable with member x.Dispose () = window.clearInterval(disposable) }
+            fun () -> window.clearInterval(disposable)

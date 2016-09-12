@@ -51,6 +51,15 @@ module Game =
         Rooms = createRooms width height |> Seq.map (fun r -> r.Position, r) |> Map.ofSeq
     }
 
+    let shuffleInPlace (array: 'a[]) =
+        let max = array.Length - 1 
+        for i' = 1 to max do
+            let i = max - i' + 1 // workaround 'downto' bug
+            let j = Random.randomInt 0 i
+            let t = array.[i]
+            array.[i] <- array.[j]
+            array.[j] <- t
+
     let opposite direction = 
         match direction with 
         | North -> South | South -> North 
@@ -76,12 +85,16 @@ module Game =
         let next location direction = 
             location |> shift direction |> Option.map (fun xy -> MoveTo (location, direction, xy))
 
+        let shuffle (array: 'a[]) = 
+            let result = array |> Array.copy
+            shuffleInPlace result 
+            result
+
         let fanout action = 
             [| West; North; East; South |] |> Array.choose (action |> targetxy |> next)
 
         let encode (x, y) = y*w + x 
 
-        let shuffle a = a
         let visited = HashSet()
         let mark = targetxy >> encode >> visited.Add >> ignore
         let test = targetxy >> encode >> visited.Contains
@@ -98,12 +111,11 @@ module Game =
             match action with
             | InitAt location -> 
                 rooms |> Map.update location (fun room -> { room with Visited = true })
-            | MoveTo (location, direction, _) -> 
+            | MoveTo (_, direction, location) -> 
                 rooms |> Map.update location (fun room -> 
                     { room with Visited = true; Exits = (opposite direction) :: room.Exits })
 
         let fold world action =
-            printfn "%A" action
             { world with Rooms = world.Rooms |> updateSource action |> updateTarget action }
 
         path |> Seq.scan fold world
