@@ -57,7 +57,7 @@ module Main =
             attr "width" (string w); attr "height" (string h)
         ] []
 
-    let renderRoom (room: Room) = [
+    let renderRoom (room: Room) = [|
         let x, y = room.Position
         let x, y = x*ROOM_SIZE + (x + 1)*DOOR_SIZE, y*ROOM_SIZE + (y + 1)*DOOR_SIZE
         yield renderBox "room" x y ROOM_SIZE ROOM_SIZE
@@ -66,12 +66,13 @@ module Main =
             | South -> yield renderBox "door" x (y + ROOM_SIZE) ROOM_SIZE DOOR_SIZE
             | East -> yield renderBox "door" (x + ROOM_SIZE) y DOOR_SIZE ROOM_SIZE
             | _ -> ()
-    ]
+    |]
 
     let renderWorld (world: World) = 
-        world.Rooms 
-        |> Map.toList 
-        |> List.collect (fun (_, r) -> if r.Visited then renderRoom r else [])
+        world.Rooms
+        |> Array.collect id
+        |> Array.collect (fun r -> if r.Visited then renderRoom r else [||])
+        |> List.ofArray
 
     let button label action =
         Tags.button 
