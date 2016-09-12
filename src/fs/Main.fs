@@ -65,13 +65,19 @@ module Main =
             [ attr "type" "button"; attr "class" "btn"; onMouseClick (fun _ -> action) ] 
             [ text label ]
 
-    let view model = 
+    let view model =
+        let w, h = 10, 10
+        let r = 10
+        let d = 2
+
+        let width = w*r + (w + 1)*d
+        let height = h*r + (h + 1)*d 
         div [] [
-            div [attr "class" "container"; attr "style" "text-align: center; margin-top: 16px"] [
+            div [attr "class" "container"; attr "style" "text-align: center; margin-top: 16px; margin-bottom: 16px"] [
                 button "Restart" Restart
             ]
             div [attr "class" "container"; attr "style" "text-align: center"] [
-                svg [attr "width" "400"; attr "height" "400"] [
+                Svg.svg [attr "width" (string width); attr "height" (string height); attr "style" "background: black"] [
                     Svg.rect [attr "x" "0"; attr "y" "0"; attr "width" "100"; attr "height" "100"] []
                 ] 
             ]
