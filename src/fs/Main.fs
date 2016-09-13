@@ -17,7 +17,6 @@ module Main =
     let [<Literal>] DOOR_SIZE = 5
 
     let jq = importDefault<obj> "jquery"
-    let jcv = importDefault<obj> "jcanvas"
 
     // let renderBox className (x: int) (y: int) (w: int) (h: int) =
     //     sprintf "M%d,%d h%dv%dh%dz" x y w h -w
@@ -76,6 +75,8 @@ module Main =
     let main () =
         printfn "version 1"
 
+        (importDefault<obj> "jcanvas") $ (jq, Browser.window) |> ignore
+
         let w, h = WORLD_WIDTH, WORLD_WIDTH
         let mazeWidth = w*ROOM_SIZE + (w + 1)*DOOR_SIZE 
         let mazeHeight = h*ROOM_SIZE + (h + 1)*DOOR_SIZE
@@ -85,6 +86,8 @@ module Main =
         let button = jq $ ("#restart")  
 
         canvas ? width(mazeWidth) ? height(mazeHeight) |> ignore
+        canvas ? clearCanvas () |> ignore
+
         button ? click(fun _ ->
             cancel ()
             cancel <- startAnimation canvas
