@@ -30,16 +30,16 @@ module Game =
             Rooms: Room[][]
         }
 
-    let newRoom x y = { 
+    let createRoom x y = { 
         Position = (x, y)
         Visited = false
         Exits = []
     }
 
     let createRooms width height =
-        Array.init height (fun y -> Array.init width (fun x -> newRoom x y))
+        Array.init height (fun y -> Array.init width (fun x -> createRoom x y))
 
-    let newWorld width height = {
+    let createWorld width height = {
         Size = (width, height)
         Rooms = createRooms width height 
     }
@@ -77,28 +77,23 @@ module Game =
         let visited = HashSet()
         let mark = targetxy >> encode >> visited.Add >> ignore
         let test = targetxy >> encode >> visited.Contains
-        let path = InitAt (x, y) |> DFS.traverse mark test (fanout >> Array.shuffle)
+        let path = InitAt (x, y) |> DFS.stackless mark test (fanout >> Array.shuffle)
 
-        let updateSource action (rooms: Room[][]) =
+        let updateSource action =
             match action with
             | InitAt _ -> ()
             | MoveTo ((x, y), direction, _) ->
-                let room = rooms.[y].[x] 
+                let room = world.Rooms.[y].[x] 
                 room.Exits <- direction :: room.Exits 
 
-        let updateTarget action (rooms: Room[][]) =
+        let updateTarget action =
             match action with
             | InitAt (x, y) ->
-                let room = rooms.[y].[x]
+                let room = world.Rooms.[y].[x]
                 room.Visited <- true 
             | MoveTo (_, direction, (x, y)) ->
-                let room = rooms.[y].[x]
+                let room = world.Rooms.[y].[x]
                 room.Visited <- true
                 room.Exits <- (opposite direction) :: room.Exits
 
-        seq {
-            for action in path do
-                world.Rooms |> updateSource action
-                world.Rooms |> updateTarget action
-                yield action
-        }
+        path |> Seq.map ((apply updateSource) >> (apply updateTarget)) 
