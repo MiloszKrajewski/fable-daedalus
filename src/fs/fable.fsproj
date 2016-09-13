@@ -50,7 +50,6 @@
     <Compile Include="Js.fs" />
     <Compile Include="DFS.fs" />
     <Compile Include="Game.fs" />
-    <Compile Include="VDOM.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
   <PropertyGroup>

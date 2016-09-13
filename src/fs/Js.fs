@@ -8,7 +8,7 @@ open System.Collections.Generic
 
 module Js =
     let inline empty () = createEmpty ()
-    let inline newmap fields = createObj fields
+    let inline newmap (fields: seq<string * obj>) = createObj fields
     let inline newobj o args = createNew o args
 
     module Random =

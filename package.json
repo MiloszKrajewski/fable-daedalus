@@ -22,7 +22,6 @@
     "exports-loader": "^0.6.3",
     "extract-text-webpack-plugin": "^1.0.1",
     "fable-compiler": "^0.6.4",
-    "fable-import-virtualdom": "^0.7.0",
     "file-loader": "^0.9.0",
     "http-server": "^0.9.0",
     "imports-loader": "^0.6.5",
@@ -38,12 +37,12 @@
     "webpack": "^1.13.2"
   },
   "dependencies": {
+    "babel-polyfill": "^6.13.0",
     "bootstrap": "^3.3.7",
     "bootstrap-webpack": "0.0.5",
-    "babel-polyfill": "^6.13.0",
     "core-js": "^2.4.1",
     "fable-core": "^0.6.1",
-    "jquery": "^3.1.0",
-    "virtual-dom": "^2.1.1"
+    "jcanvas": "^16.7.3",
+    "jquery": "^3.1.0"
   }
 }

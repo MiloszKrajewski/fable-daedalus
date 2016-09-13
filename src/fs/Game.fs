@@ -7,10 +7,6 @@ open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
 
-open Fable.Helpers.Virtualdom
-open Fable.Helpers.Virtualdom.App
-open Fable.Helpers.Virtualdom.Html
-
 open Daedalus.Js
 
 module Game =
@@ -101,9 +97,8 @@ module Game =
                 room.Exits <- (opposite direction) :: room.Exits
 
         seq {
-            yield world
             for action in path do
                 world.Rooms |> updateSource action
                 world.Rooms |> updateTarget action
-                yield world
+                yield action
         }
