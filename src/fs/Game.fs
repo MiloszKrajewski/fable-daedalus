@@ -74,7 +74,7 @@ module Game =
             match action with
             | InitAt _ -> ()
             | MoveTo (source, direction, target) ->
-                (roomAt source).Exits.Add(direction) |> ignore 
-                (roomAt target).Exits.Add(opposite direction) |> ignore 
+                direction |> (roomAt source).Exits.Add |> ignore 
+                opposite direction |> (roomAt target).Exits.Add |> ignore 
  
         path |> Seq.map (apply updateExits) 

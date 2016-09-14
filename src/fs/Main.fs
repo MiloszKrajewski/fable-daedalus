@@ -24,7 +24,7 @@ module Main =
     let startAnimation canvas =
         let drawBox (color: string) (x: int) (y: int) (w: int) (h: int) =
             let rect = 
-                newmap [ 
+                createObj [ 
                     "fillStyle" ==> color; 
                     "x" ==> x; "y" ==> y; "width" ==> w; "height" ==> h; 
                     "fromCenter" ==> false 

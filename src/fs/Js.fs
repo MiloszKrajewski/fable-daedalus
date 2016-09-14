@@ -2,7 +2,6 @@ namespace Daedalus
 
 open Fable.Core
 open Fable.Core.JsInterop
-open Fable.Import.Browser
 open System
 open System.Collections.Generic
 
@@ -63,6 +62,8 @@ module Js =
         let value (enumerator: Enumerator<_>) = enumerator.Value
 
     module Time = 
+        open Fable.Import.Browser
+
         let now () = DateTime.UtcNow.Subtract(DateTime.MinValue).TotalSeconds
         let defer seconds (action: unit -> unit) = 
             let disposable = window.setTimeout (action, seconds / 1000.0)
