@@ -21,6 +21,8 @@ module Main =
 
     let jq = importDefault<obj> "jquery"
 
+    let toPixel (x, y) = x*ROOM_SIZE + (x + 1)*DOOR_SIZE, y*ROOM_SIZE + (y + 1)*DOOR_SIZE 
+
     let startAnimation canvas =
         let drawBox (color: string) (x: int) (y: int) (w: int) (h: int) =
             let rect = 
@@ -30,8 +32,6 @@ module Main =
                     "fromCenter" ==> false 
                 ]
             canvas ? drawRect(rect) |> ignore
-
-        let inline toPixel (x, y) = x*ROOM_SIZE + (x + 1)*DOOR_SIZE, y*ROOM_SIZE + (y + 1)*DOOR_SIZE 
 
         let drawRoom location =
             let x, y = toPixel location in drawBox ROOM_COLOR x y ROOM_SIZE ROOM_SIZE
@@ -44,8 +44,7 @@ module Main =
             | East -> drawBox DOOR_COLOR (x + ROOM_SIZE) y DOOR_SIZE ROOM_SIZE
             | West -> drawBox DOOR_COLOR (x - DOOR_SIZE) y DOOR_SIZE ROOM_SIZE
 
-        let world = createWorld WORLD_WIDTH WORLD_HEIGHT 
-        let mutable action = world |> enumerateActions 0 0 |> Enumerator.create
+        let mutable action = buildMaze WORLD_WIDTH WORLD_HEIGHT |> Enumerator.create
 
         let mutable cancel = id
         cancel <- Time.interval (1.0 / 60.0) (fun _ ->
@@ -66,15 +65,12 @@ module Main =
 
         (importDefault<obj> "jcanvas") $ (jq, Browser.window) |> ignore
 
-        let w, h = WORLD_WIDTH, WORLD_HEIGHT
-        let mazeWidth = w*ROOM_SIZE + (w + 1)*DOOR_SIZE 
-        let mazeHeight = h*ROOM_SIZE + (h + 1)*DOOR_SIZE
-
+        let w, h = toPixel (WORLD_WIDTH, WORLD_HEIGHT)
         let canvas = jq $ ("#canvas")
         canvas 
-            ? attr("width", mazeWidth) ? attr("height", mazeHeight) 
-            ? attr("viewbox", sprintf "0 0 %d %d" mazeWidth mazeHeight) 
-            ? attr("viewport", sprintf "0 0 %d %d" mazeWidth mazeHeight) 
+            ? attr("width", w) ? attr("height", h) 
+            ? attr("viewbox", sprintf "0 0 %d %d" w h) 
+            ? attr("viewport", sprintf "0 0 %d %d" w h) 
             |> ignore
 
         let mutable cancel = id

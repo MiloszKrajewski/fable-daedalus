@@ -11,70 +11,40 @@ open Daedalus.Js
 
 module Game =
     type Location = int * int
+
     type Direction = | North | East | South | West
-
-    type Action =
-        | InitAt of Location
-        | MoveTo of Location * Direction * Location
-
-    type Room = 
-        {
-            Location: Location
-            mutable Visited: bool
-            Exits: ResizeArray<Direction>
-        }
-
-    type World = 
-        {
-            Size: Location
-            Rooms: Room[][]
-        }
 
     let opposite direction = 
         match direction with 
         | North -> South | South -> North 
         | West -> East | East -> West
 
-    let shift direction (x, y) =
+    let shift (x, y) direction =
         match direction with
         | North -> (x, y - 1) | South -> (x, y + 1) 
         | East -> (x + 1, y) | West -> (x - 1, y)
+
+    type Action =
+        | InitAt of Location
+        | MoveTo of Location * Direction * Location
 
     let targetOf action = 
         match action with 
         | InitAt location -> location 
         | MoveTo (_, _, location) -> location
 
-    let createRoom x y = { Location = (x, y); Visited = false; Exits = ResizeArray() }
+    let buildMaze width height = 
+        let isValid (x, y) = x >= 0 && y >= 0 && x < width && y < height
+        let visited = HashSet()
+        let encode (x, y) = y*width + x 
+        let mark location = location |> encode |> visited.Add |> ignore
+        let test location = location |> encode |> visited.Contains
 
-    let createRooms width height =
-        Array.init height (fun y -> Array.init width (fun x -> createRoom x y))
-
-    let createWorld width height = { Size = (width, height); Rooms = createRooms width height }
-
-    let enumerateActions x y (world: World) = 
-        let isValid (x, y) = let w, h = world.Size in x >= 0 && y >= 0 && x < w && y < h
-        let roomAt (x, y) = world.Rooms.[y].[x]
-        let mark action = (action |> targetOf |> roomAt).Visited <- true
-        let test action = (action |> targetOf |> roomAt).Visited
-
-        let createAction source direction = 
-            source 
-            |> shift direction |> Some 
-            |> Option.filter isValid 
-            |> Option.map (fun target -> MoveTo (source, direction, target))
-
-        let fanout action = 
+        // Location -> Action seq
+        let fanout source =
             [| West; North; East; South |] 
-            |> Array.choose (action |> targetOf |> createAction)
+            |> Array.map (fun direction -> MoveTo (source, direction, shift source direction))
+            |> Array.filter (targetOf >> isValid)
 
-        let path = InitAt (x, y) |> DFS.stackless mark test (fanout >> Array.shuffle)
-
-        let updateExits action =
-            match action with
-            | InitAt _ -> ()
-            | MoveTo (source, direction, target) ->
-                direction |> (roomAt source).Exits.Add |> ignore 
-                opposite direction |> (roomAt target).Exits.Add |> ignore 
- 
-        path |> Seq.map (apply updateExits) 
+        InitAt (0, 0) 
+        |> DFS.stackless (targetOf >> mark) (targetOf >> test) (targetOf >> fanout >> Array.shuffle)
