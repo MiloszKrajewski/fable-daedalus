@@ -10,90 +10,71 @@ open Fable.Import
 open Daedalus.Js
 
 module Game =
-    type Coords = int * int
+    type Location = int * int
     type Direction = | North | East | South | West
 
     type Action =
-        | InitAt of Coords
-        | MoveTo of Coords * Direction * Coords
+        | InitAt of Location
+        | MoveTo of Location * Direction * Location
 
     type Room = 
         {
-            Position: Coords
+            Location: Location
             mutable Visited: bool
-            mutable Exits: Direction list
+            Exits: ResizeArray<Direction>
         }
 
     type World = 
         {
-            Size: Coords
+            Size: Location
             Rooms: Room[][]
         }
-
-    let createRoom x y = { 
-        Position = (x, y)
-        Visited = false
-        Exits = []
-    }
-
-    let createRooms width height =
-        Array.init height (fun y -> Array.init width (fun x -> createRoom x y))
-
-    let createWorld width height = {
-        Size = (width, height)
-        Rooms = createRooms width height 
-    }
 
     let opposite direction = 
         match direction with 
         | North -> South | South -> North 
         | West -> East | East -> West
 
-    let buildMaze x y (world: World) = 
-        let w, h = world.Size
+    let shift direction (x, y) =
+        match direction with
+        | North -> (x, y - 1) | South -> (x, y + 1) 
+        | East -> (x + 1, y) | West -> (x - 1, y)
 
-        let valid (x, y) = x >= 0 && y >= 0 && x < w && y < h
+    let targetOf action = 
+        match action with 
+        | InitAt location -> location 
+        | MoveTo (_, _, location) -> location
 
-        let shift direction (x, y) =
-            match direction with
-            | North -> (x, y - 1) | South -> (x, y + 1) 
-            | East -> (x + 1, y) | West -> (x - 1, y)
-            |> Some |> Option.filter valid
+    let createRoom x y = { Location = (x, y); Visited = false; Exits = ResizeArray() }
 
-        let sourcexy action = 
-            match action with | MoveTo (xy, _, _) -> Some xy | _ -> None 
+    let createRooms width height =
+        Array.init height (fun y -> Array.init width (fun x -> createRoom x y))
 
-        let targetxy action = 
-            match action with | InitAt xy -> xy | MoveTo (_, _, xy) -> xy
+    let createWorld width height = { Size = (width, height); Rooms = createRooms width height }
 
-        let next location direction = 
-            location |> shift direction |> Option.map (fun xy -> MoveTo (location, direction, xy))
+    let enumerateActions x y (world: World) = 
+        let isValid (x, y) = let w, h = world.Size in x >= 0 && y >= 0 && x < w && y < h
+        let roomAt (x, y) = world.Rooms.[y].[x]
+        let mark action = (action |> targetOf |> roomAt).Visited <- true
+        let test action = (action |> targetOf |> roomAt).Visited
+
+        let createAction source direction = 
+            source 
+            |> shift direction |> Some 
+            |> Option.filter isValid 
+            |> Option.map (fun target -> MoveTo (source, direction, target))
 
         let fanout action = 
-            [| West; North; East; South |] |> Array.choose (action |> targetxy |> next)
+            [| West; North; East; South |] 
+            |> Array.choose (action |> targetOf |> createAction)
 
-        let encode (x, y) = y*w + x 
-
-        let visited = HashSet()
-        let mark = targetxy >> encode >> visited.Add >> ignore
-        let test = targetxy >> encode >> visited.Contains
         let path = InitAt (x, y) |> DFS.stackless mark test (fanout >> Array.shuffle)
 
-        let updateSource action =
+        let updateExits action =
             match action with
             | InitAt _ -> ()
-            | MoveTo ((x, y), direction, _) ->
-                let room = world.Rooms.[y].[x] 
-                room.Exits <- direction :: room.Exits 
-
-        let updateTarget action =
-            match action with
-            | InitAt (x, y) ->
-                let room = world.Rooms.[y].[x]
-                room.Visited <- true 
-            | MoveTo (_, direction, (x, y)) ->
-                let room = world.Rooms.[y].[x]
-                room.Visited <- true
-                room.Exits <- (opposite direction) :: room.Exits
-
-        path |> Seq.map ((apply updateSource) >> (apply updateTarget)) 
+            | MoveTo (source, direction, target) ->
+                (roomAt source).Exits.Add(direction) |> ignore 
+                (roomAt target).Exits.Add(opposite direction) |> ignore 
+ 
+        path |> Seq.map (apply updateExits) 
