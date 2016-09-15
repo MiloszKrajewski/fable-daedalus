@@ -33,7 +33,7 @@ module Game =
         | InitAt location -> location 
         | MoveTo (_, _, location) -> location
 
-    let buildMaze width height = 
+    let buildMaze width height shake = 
         let isValid (x, y) = x >= 0 && y >= 0 && x < width && y < height
         let visited = HashSet()
         let encode (x, y) = y*width + x 
@@ -47,4 +47,4 @@ module Game =
             |> Array.filter (targetOf >> isValid)
 
         InitAt (0, 0) 
-        |> DFS.stackless (targetOf >> mark) (targetOf >> test) (targetOf >> fanout >> Array.shuffle)
+        |> DFS.stackless (targetOf >> mark) (targetOf >> test) (targetOf >> fanout >> Array.shuffle) shake

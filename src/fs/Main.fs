@@ -13,7 +13,7 @@ open Daedalus.Game
 module Main =
     let [<Literal>] WORLD_WIDTH = 100
     let [<Literal>] WORLD_HEIGHT = 100
-    let [<Literal>] ROOM_SIZE = 5
+    let [<Literal>] ROOM_SIZE = 4
     let [<Literal>] DOOR_SIZE = 1
 
     let [<Literal>] ROOM_COLOR = "#fff"
@@ -23,7 +23,7 @@ module Main =
 
     let toPixel (x, y) = x*ROOM_SIZE + (x + 1)*DOOR_SIZE, y*ROOM_SIZE + (y + 1)*DOOR_SIZE 
 
-    let startAnimation canvas =
+    let startAnimation shake canvas =
         let drawBox (color: string) (x: int) (y: int) (w: int) (h: int) =
             let rect = 
                 createObj [ 
@@ -44,7 +44,7 @@ module Main =
             | East -> drawBox DOOR_COLOR (x + ROOM_SIZE) y DOOR_SIZE ROOM_SIZE
             | West -> drawBox DOOR_COLOR (x - DOOR_SIZE) y DOOR_SIZE ROOM_SIZE
 
-        let mutable action = buildMaze WORLD_WIDTH WORLD_HEIGHT |> Enumerator.create
+        let mutable action = buildMaze WORLD_WIDTH WORLD_HEIGHT shake |> Enumerator.create
 
         let mutable cancel = id
         cancel <- Time.interval (1.0 / 60.0) (fun _ ->
@@ -65,18 +65,28 @@ module Main =
 
         (importDefault<obj> "jcanvas") $ (jq, Browser.window) |> ignore
 
-        let w, h = toPixel (WORLD_WIDTH, WORLD_HEIGHT)
-        let canvas = jq $ ("#canvas")
-        canvas 
-            ? attr("width", w) ? attr("height", h) 
-            ? attr("viewbox", sprintf "0 0 %d %d" w h) 
-            ? attr("viewport", sprintf "0 0 %d %d" w h) 
-            |> ignore
+        let shake stack = 
+            if Random.random () > 0.01 then stack
+            else stack |> Array.ofList |> apply Array.shuffleInPlace |> Array.toList
 
-        let mutable cancel = id
+        let w, h = toPixel (WORLD_WIDTH, WORLD_HEIGHT)
+        let canvases = [jq $ ("#canvasA"); jq $ ("#canvasB")]
+
+        canvases |> List.iter (fun canvas -> 
+            canvas
+                ? attr("width", w) ? attr("height", h) 
+                ? attr("viewbox", sprintf "0 0 %d %d" w h) 
+                ? attr("viewport", sprintf "0 0 %d %d" w h) 
+                |> ignore
+        )
+
+        let mutable cancel = []
         let button = jq $ ("#restart")  
         button ? click(fun _ ->
-            cancel ()
-            canvas ? clearCanvas () |> ignore
-            cancel <- startAnimation canvas
+            cancel |> List.iter (fun x -> x ())
+            canvases |> List.iter(fun canvas -> 
+                canvas ? clearCanvas () |> ignore)
+            cancel <-
+                canvases |> List.zip [id; shake] |> List.map (fun (shake, canvas) -> 
+                    canvas |> startAnimation shake) 
         ) |> ignore

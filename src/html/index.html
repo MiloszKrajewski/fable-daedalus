@@ -14,10 +14,26 @@
             <div class="row content">
                 <button id="restart" type="button" class="btn">Restart</button>
             </div>
-        </div>
-        <div class="container">
             <div class="row content">
-                <canvas id="canvas" class="maze"></canvas>
+                <div class="col-sm-6" style="text-align: center">
+                    <figure>
+                        <canvas id="canvasA" class="maze"></canvas>
+                        <figcaption id="captionA">
+                            randomized DFS<br>
+                            (backtracks if blocked, but usually pushes forward)
+                        </figcaption>
+                    </figure>
+                </div>
+                <div class="col-sm-6" style="text-align: center">
+                    <figure>
+                        <canvas id="canvasB" class="maze"></canvas>
+                        <figcaption id="captionB">
+                            Randomized DFS with stack shaking<br>
+                            (you can notice it "teleporting" back and restarting<br>
+                            from already visited location erraticly)
+                        </figcaption>
+                    </figure>
+                </div>
             </div>
         </div>
     </div>

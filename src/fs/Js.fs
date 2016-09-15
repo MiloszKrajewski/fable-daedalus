@@ -10,6 +10,10 @@ module Js =
     let inline newmap (fields: seq<string * obj>) = createObj fields
     let inline newobj o args = createNew o args
 
+    [<AutoOpen>]
+    module Fx =
+        let apply f v = f v; v
+
     [<Emit("console.log($0)")>]
     let debug object = failwith "JS only"
 
@@ -35,10 +39,7 @@ module Js =
                 let j = Random.randomInt 0 i
                 array |> swapInPlace i j
         
-        let shuffle array = 
-            let result = array |> Array.copy
-            shuffleInPlace result
-            result
+        let shuffle array = array |> Array.copy |> apply shuffleInPlace
         
         [<Emit("$1.join($0)")>]
         let join (separator: string) (array: string[]): string = failwith "JS only"
@@ -46,10 +47,6 @@ module Js =
     module Map = 
         let update key func map =
             map |> Map.add key (map |> Map.find key |> func)
-
-    [<AutoOpen>]
-    module Fx =
-        let apply f v = f v; v
 
     type Enumerator<'item>(enumerator: IEnumerator<'item>) =
         member this.Next () = match enumerator.MoveNext () with | false -> None | _ -> Some this

@@ -14,11 +14,11 @@ module DFS =
         | _ -> ()  
     }
 
-    let rec stackless mark test fanout node = seq {
+    let rec stackless mark test fanout shake node = seq {
         let mutable stack = [[node]]
         while stack.Length > 0 do
             let head, stack' = 
-                match stack with
+                match shake stack with
                 | [] -> None, [] 
                 | [] :: rest -> None, rest
                 | (head :: tail) :: rest ->
