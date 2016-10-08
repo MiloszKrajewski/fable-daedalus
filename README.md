@@ -1,6 +1,7 @@
 # Maze generation using depth first search with Fable (F# to JS compiler)
 
 Read about it: http://red-green-rewrite.github.io/2016/09/14/Maze-generator-with-Fable/
+
 Online demo: http://red-green-rewrite.github.io/fable-daedalus/index.html
 
 Requires:
